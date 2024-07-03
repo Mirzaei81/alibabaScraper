@@ -1,0 +1,23 @@
+{
+  "name": "alibaba",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "scrape alibaba for open position",
+  "main": "./dist/index.js",
+  "scripts": {
+    "start": "swc ./src -d ./dist & node ./dist/main.js",
+    "test": "jest ."
+  },
+  "keywords": [
+    "scraper",
+    "node",
+    "fetch"
+  ],
+  "author": "MthBest",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "shamsi-date-converter": "^1.0.5",
+    "swc": "^1.0.11"
+  }
+}
