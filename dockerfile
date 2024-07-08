@@ -21,6 +21,7 @@ COPY src ./src
 COPY .swrc ./.swrc
 COPY .env ./.env
 USER root
+RUN mkdir -p /env
 RUN touch /env/cron.log
 COPY cronfile /etc/cron.d/cronfile
 RUN chmod 0644 /etc/cron.d/cronfile
