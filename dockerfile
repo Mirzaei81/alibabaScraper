@@ -12,6 +12,7 @@ VOLUME /env
 WORKDIR /app
 RUN chmod -R a+rw .
 RUN chmod -R a+rw /app
+COPY package.json /app
 # Install dependencies
 RUN npm i
 RUN apt-get update && apt-get install cron vim -y 
