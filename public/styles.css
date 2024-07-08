@@ -1,0 +1,11 @@
+@font-face {
+    font-family: sans;
+    src: url('/sans.woff2');
+}
+
+body {
+    font-family: sans !important;
+    max-width: 1300px;
+    margin: 100px auto;
+    direction: rtl !important;
+}

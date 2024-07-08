@@ -1,20 +1,28 @@
 import { config } from "dotenv";
-import {Flights,Available, basketId, orderId} from "./types"
+import {Flights,Available, TrainStored, flightStoredList, flightStored, } from "./types"
 import {getEnvValue } from "./env.js";
 import {writeFileSync} from "fs"
 import { login } from "./login.js";
 import { getPlaneUrl } from "./getPlaneUrl.js";
-config()
-export const getPlaneTicket=async()=>{
+import {readPlaneVars,setPlaneValue} from "./FlightQue.js";
+import os from "os"
+import { getMe } from "./getMe.js";
+import { sleep } from "./sleep.js";
+
+export const getPlaneTicket=async(personalData:flightStored)=>{
     if (getEnvValue("Access_token") == undefined) {
         await login()
     }
-    const today = new Date()
-    const dd = String(today.getDay()).padStart(2, "0")
-    const MM = String(today.getMonth() + 1).padStart(2, "0")// odd behavior that we are one month behind 
-    const yyyy = String(today.getFullYear())
-    const body = { "origin": process.env.origin, "destination": process.env.destination, "departureDate": yyyy + "-" + MM + "-" + dd, "adult": 1, "child": 0, "infant": 0 }
-    const access_token = process.env.Access_token
+    await getMe()
+    const body = {
+        "origin": personalData.origin,
+        "destination": personalData.dest,
+        "departureDate": personalData.departureDate,
+        "adult": personalData.personals.length,
+        "child": 0,
+        "infant": 0
+    }
+    const access_token = getEnvValue("Access_token")
     const available = await fetch("https://ws.alibaba.ir/api/v1/flights/domestic/available", {
         "headers": {
             "ab-channel": "WEB-NEW,PRODUCTION,CSR,www.alibaba.ir,desktop,Chrome,126.0.0.0,N,N,Windows,10,3.28.0",
@@ -37,7 +45,10 @@ export const getPlaneTicket=async()=>{
         "body": JSON.stringify(body),
         "method": "POST"
     });
-    console.warn(available.status+":40\tplane.ts")
+    if (Math.floor(available.status / 100) == 4||Math.floor(available.status / 100) == 5) {
+        return await available.text()
+    }
+    await sleep(5000)
     const availableJSON: Available = await available.json()
     const requestId = availableJSON.result.requestId
     const flight = await fetch(`https://ws.alibaba.ir/api/v1/flights/domestic/available/${requestId}`, {
@@ -62,9 +73,31 @@ export const getPlaneTicket=async()=>{
         "method": "GET"
     });
     const flighJ: Flights = await flight.json()
-    for(const url of flighJ.result.departing){
-        if(url.proposalId){
-            getPlaneUrl(url.proposalId,process.env.origin!,process.env.destination!)
+    const unset: flightStored[] = []
+    for (const url of flighJ.result.departing) {
+        if (url.seat >=personalData.personals.length) {
+            if (url.proposalId) {
+                personalData.proposalId = url.proposalId
+                const res = await getPlaneUrl(personalData)
+                return res
+            }
+        }
+        else {
+            if (url.status == "C") {//تکمیل ظرفیت
+                if (url.proposalId) {
+                    let personIdCopy = structuredClone(personalData);
+                    personIdCopy.proposalId = url.proposalId
+                    unset.push(personIdCopy)
+                }
+            }
+        }
+    }
+    const flightsInQue = readPlaneVars()
+    for(const ticket of unset){
+        if(ticket.proposalId){
+            flightsInQue.data.push(ticket)
+            setPlaneValue(flightsInQue)
+            return `پرواز داخلی به شماره ${ticket.proposalId} از ${ticket.origin} به ${ticket.dest}ذخیره شد`
         }
     }
 }

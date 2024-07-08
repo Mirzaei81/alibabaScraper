@@ -1,16 +1,17 @@
+import { getEnvValue } from "./env.js";
 import { login } from "./login.js";
-import { basketId, orderId } from "./types";
-export const getPlaneUrl =async(proposalId:string,origin:string,dest:string)=>{
-    const access_token = process.env.Access_token
+import { basketId, flightStored, flightStoredList, orderId } from "./types";
+export const getPlaneUrl =async(personalData:flightStored)=>{
+    const access_token = getEnvValue("Access_token")
     const dom_body = {
-        "providerItemIds": [proposalId],
-        "passengers": [{ "flightAgeType": "adult", "title": "MR", "name": process.env.name, "lastName": process.env.lastName, "id": 0, "birthdate": process.env.birthdate, "identification": { "id": 0, "type": "NationalNumber", "placeOfIssue": "IRN", "placeOfBirth": "IRN", "code": process.env.meli_code } }]
+        "providerItemIds": [personalData.proposalId],
+        "passengers": []
     }
-    let attempt = 0
-    const max_attempt = 5
-    let data: basketId
-    while(attempt<max_attempt){
-        try{
+    for(let i=0;i<personalData.personals.length;i++){
+        //@ts-ignore
+        dom_body.passengers.push({ "flightAgeType": personalData.personals[i].flightAgeType, "title": "MR", "name": personalData.personals[i].name, "lastName": personalData.personals[i].lastName, "id": i, "birthdate": personalData.personals[i].birthdate, "identification": { "id": i, "type": "NationalNumber", "placeOfIssue": "IRN", "placeOfBirth": "IRN", "code": personalData.personals[i].code} })
+    }
+    console.log(JSON.stringify(dom_body))
     const basketId_res = await fetch("https://ws.alibaba.ir/api/v1/coordinator/basket/items/domestic-flights", {
         "headers": {
             "ab-channel": "WEB-NEW,PRODUCTION,CSR,www.alibaba.ir,desktop,Chrome,126.0.0.0,N,N,Windows,10,3.29.0",
@@ -32,18 +33,11 @@ export const getPlaneUrl =async(proposalId:string,origin:string,dest:string)=>{
         },
         "body": JSON.stringify(dom_body),
         "method": "PUT"
-        });
-        if (basketId_res.status == 401) throw new Error("Couldn't catch that");
-        data = await basketId_res.json()
-        break
-        }catch{
-            await login()
-            attempt+=1
-            
-        }
-    }
+    });
+    if (Math.floor(basketId_res.status / 100) == 4||Math.floor(basketId_res.status / 100) == 5)
+         return await basketId_res.text();
+    let data: basketId= await basketId_res.json()
     //@ts-ignore
-    if(data==undefined)throw new Error("Couldn't get basket_id Problam with login");
     let basekt_id = data.result.basketId
     const checkout = await fetch(`https://ws.alibaba.ir/api/v2/coordinator/basket/${basekt_id}/checkout`, {
         "headers": {
@@ -67,6 +61,6 @@ export const getPlaneUrl =async(proposalId:string,origin:string,dest:string)=>{
         "body": "{\"notificationCellphoneNumber\":\"\",\"notificationEmail\":\"\"}",
         "method": "POST"
     });
-    const checkoutJ: orderId= await checkout.json()
-    console.log(`https://www.alibaba.ir/flights/${origin}-${dest}/zjxkk2p/${checkoutJ.result.orderId}/confirm`)
+    const checkoutJ: orderId = await checkout.json()
+    return `https://www.alibaba.ir/flights/${personalData.origin}-${personalData.dest}/zjxkk2p/${checkoutJ.result.orderId}/confirm`
 }

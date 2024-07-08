@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ربات خرید بلیط</title>
+    <link href="bootstrap.rtl.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="p-5">
+
+    <form action="/buy" method="post">
+
+    <div id="alert" style="display: none;" class="alert alert-info" role="alert">
+    </div>
+        <div  class="mb-4">
+            <label class="form-label">نوع بلیط</label>
+            <select required name="type" id="ticketTypeSelect" class="form-select" aria-label="Default select example">
+                <option value="flights">پرواز داخلی</option>
+                <option value="train">قطار</option>
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">مبدا (شهر)</label>
+            <select required name="from" id="fromSelect" class="form-select" aria-label="Default select example">
+
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">مقصد (شهر)</label>
+            <select required name="to" id="toSelect" class="form-select" aria-label="Default select example">
+
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <div class="form-check form-check-inline me-5">
+                <input class="form-check-input" type="radio" checked name="way" id="inlineRadio1" value="one">
+                <label class="form-check-label" for="inlineRadio1">یک طرفه</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="way" id="inlineRadio2" value="two">
+                <label class="form-check-label" for="inlineRadio2">رفت و برگشت</label>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label for="departing" class="form-label">تاریخ رفت</label>
+            <input required type="text" dir="ltr" placeholder="1403-02-30" class="form-control" id="departing"
+                name="departing">
+        </div>
+
+        <div class="mb-4">
+            <label for="returning" class="form-label">تاریخ برگشت</label>
+            <input type="text" dir="ltr" disabled style="opacity: 0.4;" placeholder="1403-02-30" class="form-control"
+                id="returning" name="returning">
+        </div>
+
+        <div class="mb-4">
+            <label for="adult" class="form-label">تعداد مسافر </label>
+            <input type="number" value="1" class="form-control" id="adult" name="adult">
+        </div>
+
+        <div class="mb-4">
+            <div class="form-check form-check-inline me-5">
+                <input class="form-check-input" type="radio" name="isExclusive" checked id="isExclusive1" value="false">
+                <label class="form-check-label" for="isExclusive1">دربست نمیخواهم</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="isExclusive" id="isExclusive2" value="true">
+                <label class="form-check-label" for="isExclusive2">دربست میخواهم</label>
+            </div>
+        </div>
+
+
+        <div id="trainElement" class="mb-4" style="display: none;">
+            <label class="form-label">شرکت‌های ریلی</label>
+            <select id="companyName" name="providers" class="form-select" aria-label="Default select example">
+                <option value="">انتخاب</option>
+                <option value="بن ريل">بن ريل</option>
+                <option value="جوپار">جوپار</option>
+                <option value="رجا">رجا</option>
+            </select>
+        </div>
+        <div class="card-body mb-4">
+        </div>
+
+
+        <button type="submit" class="btn btn-primary">ثبت</button>
+    </form>
+
+    <script src="bootstrap.min.js"></script>
+    <script src="shamsi.js"></script>
+    <script>
+        function isValidDate(s){
+            return new RegExp(/^(\d{4})-(\d{1,2})-(\d{2})$/).test(s);
+        }
+        const personInputs =  `
+        <div class="mb-4 pb-4 border-bottom">
+        <div class="row mb-4">
+<div class="col">
+    <label for="firstname" class="form-label">نام</label>
+    <input type="text" class="form-control" id="firstname" name="firstname" required>
+</div>
+
+<div class="col">
+    <label for="lastname" class="form-label">نام خانوادگی</label>
+    <input type="text" class="form-control" id="lastname" name="lastname" required>
+</div>
+
+<div class="col">
+    <label for="gender" class="form-label">جنسیت</label>
+    <select id="gender" name="gender" class="form-select">
+        <option value="male">مرد</option>
+        <option value="female">زن</option>
+    </select>
+</div>
+<div class="col">
+    <label for="meli" class="form-label">کد ملی</label>
+    <input type="number" value="1" class="form-control" id="meli" name="meli" required>
+</div>
+</div>
+<div class="row">
+<div class="col">
+    <label for="day" class="form-label">تاریخ تولد (روز)</label>
+    <input type="number" value="1" class="form-control" id="day" name="day" required>
+</div>
+<div class="col">
+    <label for="month" class="form-label">تاریخ تولد (ماه)</label>
+    <input type="number" value="1" class="form-control" id="month" name="month" required>
+</div>
+<div class="col">
+    <label for="year" class="form-label">تاریخ تولد (سال)</label>
+    <input type="number" value="1" class="form-control" id="year" name="year">
+</div>
+<div id="Service" style="display: none;" class="col">
+    <label for="service" class="form-label">نوع خدمات</label>
+    <select type="text" class="serviceSelector form-control" name="service"></select>
+</div>
+        <div class="mb-4">
+            <label class="form-label">گروه سنی</label>
+            <select required name="groupType" id="ageGroups" class="form-select" aria-label="Default select example">
+                <option value="adult">بزرگسال</option>
+                <option value="child">کودک</option>
+                <option value="infant">نوزاد</option>
+            </select>
+        </div>
+</div>
+</div>
+        `
+        const alert_ele =  document.querySelector("#alert")
+        let isTrain=false
+        const serviceAvailable = []
+        /**
+        * @type {HTMLInputElement}
+        */
+
+        const adultInput = document.querySelector('#adult');
+        /**
+        * @type {HTMLInputElement}
+        */
+        const departing = document.querySelector("#departing")
+        /**
+        * @type {HTMLInputElement}
+        */
+        const companyName= document.querySelector("#companyName")
+        const today = new Date(Date.now())
+        const Y = today.getFullYear()
+        const M = today.getMonth()+1
+        const D = today.getDay()+7
+        const today_shamsi =  gregorianToJalali(Y, M,D).join("-");
+        departing.value =today_shamsi;
+        let service_proposalId;
+        async function getServices() {
+            const data = {
+                date: departing.value,
+                origin: document.querySelector("#fromSelect").value,
+                dest: document.querySelector("#toSelect").value,
+                companyName: companyName.value,
+                adaults_count: adultInput.value,
+                ticketType: document.querySelector('#ticketTypeSelect').value[0]
+            };
+            const url = "/services";
+            const res = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            })
+            if (!res.ok){
+                alert(await res.text())
+            }
+            else {
+                let AvailableServices = await res.json()
+                service_proposalId = AvailableServices.proposalId
+                let serviceSelectors = document.querySelectorAll(".serviceSelector")
+                for(const selector of serviceSelectors){
+                    selector.innerHTML="";
+                    if(AvailableServices){
+                        if(AvailableServices.length>1){
+                            AvailableServices.map(item => {
+                                if (item.serviceName) {
+                                    const option = document.createElement("option");
+                                    option.innerHTML = item.serviceName + "-" + item.showMoney.toLocaleString();
+                                    option.value = item.optionalServiceId;
+                                    selector.append(option);
+                                }
+                            })
+                        }
+                        else{
+                            if (AvailableServices.serviceName) {
+                                const option = document.createElement("option");
+                                option.innerHTML = AvailableServices.serviceName + "-" + AvailableServices.showMoney.toLocaleString();
+                                option.value = AvailableServices.optionalServiceId;
+                                selector.append(option);
+                            }
+                        }
+                }
+                }
+            }
+        }
+    companyName.addEventListener("change", (e) => {
+        /*
+        *@type {HTMLButtonElement}
+        */
+        if(!isValidDate(document.querySelector("#departing").value)){
+            alert("تاریخ به درستی وارد نشده(روز-ماه-سال)")
+        }
+        else if(document.querySelector("#fromSelect").value==document.querySelector("#toSelect").value){
+               alert("مبدا با مقصد برابر است ") 
+        }
+        else {
+            getServices()
+        }
+    })
+    const flightsData = [
+        {
+            label: 'تهران',
+            value: 'THR'
+        },
+        {
+            label: 'اهواز',
+            value: 'AWZ'
+        },
+        {
+            label: 'شیراز',
+            value: 'SYZ'
+        },
+        {
+            label: 'مشهد',
+            value: 'MHD'
+        },
+        {
+            label: 'بندرعباس',
+            value: 'BND'
+        },
+        {
+            label: 'اصفهان',
+            value: 'IFN'
+        },
+        {
+            label: 'تبریز',
+            value: 'TBZ'
+        },
+        {
+            label: 'کیش',
+            value: 'KIH'
+        },
+    ]
+
+    const trainData = [
+        {
+            label: 'تهران',
+            value: 'THR'
+        },
+        {
+            label: 'مشهد',
+            value: 'MHD'
+        },
+        {
+            label: 'یزد',
+            value: 'AZD'
+        },
+        {
+            label: 'بندرعباس',
+            value: 'BND'
+        },
+        {
+            label: 'قم',
+            value: 'QUM'
+        },
+        {
+            label: 'تبریز',
+            value: 'TBZ'
+        },
+        {
+            label: 'کرمان',
+            value: 'KER'
+        },
+        {
+            label: 'شیراز',
+            value: 'SYZ'
+        },
+        {
+            label: 'اهواز',
+            value: 'AWZ'
+        },
+        {
+            label: 'اصفهان',
+            value: 'IFN'
+        },
+    ]
+
+    const fromSelect = document.querySelector("#fromSelect");
+    const toSelect = document.querySelector("#toSelect");
+    const trainElement = document.querySelector("#trainElement")
+
+    fromSelect.innerHTML = '';
+    toSelect.innerHTML = '';
+    let options = [];
+    flightsData.map(item => {
+        if (item.value) {
+            const option = document.createElement("option");
+            option.innerHTML = item.label;
+            option.value = item.value;
+            fromSelect.append(option);
+
+            const option2 = document.createElement("option");
+            option2.innerHTML = item.label;
+            option2.value = item.value;
+            toSelect.appendChild(option2);
+        }
+    })
+
+    const ticketTypeSelect = document.querySelector('#ticketTypeSelect').addEventListener("change", e => {
+        const Services = document.querySelectorAll("#Service")
+        const selectValue = e.target.value;
+        fromSelect.innerHTML = '';
+        toSelect.innerHTML = '';
+        let options = [];
+
+        if (selectValue === "train") {
+            isTrain = true
+            trainElement.style.display = "Block";
+            for (const Service of Services) {
+                Service.style.display = "Block";
+            }
+            trainData.map(item => {
+                if (item.value) {
+                    const option = document.createElement("option");
+                    option.innerHTML = item.label;
+                    option.value = item.value;
+                    fromSelect.append(option);
+
+                    const option2 = document.createElement("option");
+                    option2.innerHTML = item.label;
+                    option2.value = item.value;
+                    toSelect.appendChild(option2);
+
+                }
+            })
+        } else {
+
+            trainElement.style.display = "none";
+            for (const Service of Services) {
+                Service.style.display = "none";
+            }
+            flightsData.map(item => {
+                if (item.value) {
+                    const option = document.createElement("option");
+                    option.innerHTML = item.label;
+                    option.value = item.value;
+                    fromSelect.append(option);
+
+                    const option2 = document.createElement("option");
+                    option2.innerHTML = item.label;
+                    option2.value = item.value;
+                    toSelect.appendChild(option2);
+                }
+            })
+        }
+
+    });
+    const formE = document.querySelector('form')
+    formE.addEventListener('submit', async (e) => {
+        document.querySelector(".btn.btn-primary").disabled=true;
+        let yearList=[]
+        let AgeGroupsList =[]
+        const years = document.querySelectorAll("#year")
+        years.forEach((val)=>{yearList.push(Number(val.value))})
+        let agesG= document.querySelectorAll("#ageGroups")
+        agesG.forEach((val)=>{AgeGroupsList.push(val.value)})
+        let faulty = false;
+        for(let i=0;i<AgeGroupsList.length;i++){
+            switch(AgeGroupsList[i]){
+                case "child":
+                    if(Y-yearList[i]<2||Y-yearList[i]>12){
+                        alert(`${i+1}امین فرد که کودک است باید سنی بین 2-12 سال داشته باشد`)
+                        faulty=true
+                    }
+                    break
+                case "adult":
+                if(Y-yearList<12){
+                    alert(`${i+1}امین فرد بزرگسال است باید سنی بزرگتر از 12 داشته باشد `)
+                        faulty=true
+                }
+                    break
+                case "infant":
+                if(Y-yearList>=2){
+                    alert(`${i+1}امین فرد که نوزاد است باید سنی بزرگتر از 2 داشته باشد `)
+                        faulty=true
+                }
+                    break
+                case "infant":
+                default:
+                alert("مشکلی پیش امد")
+            }
+        }
+        e.preventDefault()
+        if(!isValidDate(document.querySelector("#departing").value)){
+            alert("تاریخ به درستی وارد نشده(روز-ماه-سال)")
+        document.querySelector(".btn.btn-primary").disabled = false;
+        }
+        else if(document.querySelector("#fromSelect").value==document.querySelector("#toSelect").value){
+            alert("مبدا با مقصد برابر است ") 
+        document.querySelector(".btn.btn-primary").disabled = false;
+        }
+        else {
+            if(!faulty){
+                document.querySelector(".btn.btn-primary").disabled=false;
+                const formData = new FormData(formE);
+                var object = {};
+                formData.forEach((value, key) => object[key] = value);
+                object["proposalID"]=service_proposalId
+                console.log(object)
+                const url = "/buy"
+                const res = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(object),
+                })
+                if (!res.ok){
+                const text = await res.text()
+                    try{
+                        alert(JSON.parse(text).error.details)
+                    }
+                    catch{
+                    alert(text)
+                    }
+                }
+               else {
+                const alert = document.querySelector("#alert")
+                alert.innerHTML  =await res.text()
+                alert.style.display = 'Block';
+               }
+            }
+            else{
+                document.querySelector(".btn.btn-primary").disabled=false;
+            }
+        }
+    })
+    /**
+    * Represents an HTML input element.
+    * @type {HTMLInputElement}
+    */
+    const returning = document.querySelector("#returning");
+    returning.value = today_shamsi
+    document.querySelector('#inlineRadio1').addEventListener('change', e => {
+        if (e.target.checked) {
+            returning.setAttribute('disabled', 'true');
+            returning.setAttribute('style', 'opacity:0.4')
+        }
+    })
+
+    document.querySelector('#inlineRadio2').addEventListener('change', e => {
+        if (e.target.checked) {
+            returning.removeAttribute('disabled')
+            returning.setAttribute('style', 'opacity:1')
+        }
+    })
+    /**
+    * Represents an HTML input element.
+    * @type {HTMLDivElement}
+    */
+    const card_body = document.querySelector('.card-body')
+    card_body.innerHTML += personInputs;
+    adultInput.addEventListener("change", (e) => {
+        card_body.innerHTML = '';
+        for (let i = 0; i < e.target.value; i++) {
+            card_body.innerHTML += personInputs
+        }
+        const Services = document.querySelectorAll("#Service");
+        if (isTrain) {
+            for (const service of Services) {
+                service.style.display = 'Block'
+            }
+        }
+        })
+        </script>
+</body>
+
+</html>

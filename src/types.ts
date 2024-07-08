@@ -247,4 +247,68 @@ export type  Flights= {
     __wrapped: boolean
     __traceId: any
   }
-   
+  export type Ticket = {
+      type: 'flights'|'train'
+      from: string,
+      to: string,
+      way: string,
+      departing: string,
+      adult: string,
+      isExclusive: string,
+      providers: string,
+      firstname: string[]|string,
+      lastname: string[]|string,
+      gender: string[]|string,
+      meli: string[]|string,
+      day: string[]|string,
+      month: string[]|string,
+      year: string[]|string,
+      service: string[]|string,
+      groupType:string[]|string
+  }
+  export type Service= {
+    date: string
+    origin: string
+    dest: string
+    companyName: string
+    adaults_count: string
+    ticketType: string
+  }
+export type TrainStoredList = {
+  data:TrainStored[]
+} 
+export type TrainStored = {
+  personals:trainPersonal[]|null[]
+  proposalId: string|null
+  origin: string
+  dest: string
+  departureDate: string
+  companyName: string
+}
+export type trainPersonal  ={
+  serviceId: number
+  namePersian: string
+  lastNamePersian: string
+  birthdate: string
+  meli_code: string
+  gender: string
+  adult: string
+  groupType:string
+}
+export type flightStoredList = {
+  data:flightStored[]
+}
+export type flightStored = {
+  proposalId:string
+  origin:string,
+  dest:string
+  departureDate: string,
+  personals:personals[]
+}
+export type personals={
+  "flightAgeType": string
+  "name": string
+  "lastName": string
+  "birthdate": string
+  "code": string
+}

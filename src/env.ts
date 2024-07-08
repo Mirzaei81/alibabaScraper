@@ -41,11 +41,3 @@ export const setEnvValue = (key:string, value:string) => {
   // write everything back to the file system
   fs.writeFileSync(envFilePath, envVars.join(os.EOL));
 };
-export const DelEnvVar = (key:string)=>{
-  const envVars = readEnvVars()
-  const targetLine = envVars.find((line)=>line.split("=")[0]==key);
-  if(targetLine){
-    envVars.splice(envVars.indexOf(targetLine));
-  }
-  fs.writeFileSync(envFilePath,envVars.join(os.EOL))
-}

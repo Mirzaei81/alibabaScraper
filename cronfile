@@ -1,0 +1,2 @@
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+*/5 * * * * /usr/local/bin/node /app/dist/src/main.js >> /env/cron.log 2>&1

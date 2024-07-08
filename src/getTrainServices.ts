@@ -1,7 +1,8 @@
+import { getEnvValue } from "./env.js";
 import { Services } from "./types";
 
 export const geTrainServices = async(PropsosalId:number)=>{
-    const access_token = process.env.Access_token
+    const access_token = getEnvValue("Access_token")
     const  res = await fetch(`https://ws.alibaba.ir/api/v2/train/proposals/${PropsosalId}/services`, {
     "headers": {
       "ab-channel": "WEB-NEW,PRODUCTION,CSR,www.alibaba.ir,desktop,Chrome,126.0.0.0,N,N,Windows,10,3.29.0",
@@ -23,6 +24,14 @@ export const geTrainServices = async(PropsosalId:number)=>{
     "body": null,
     "method": "GET"
   });
+  console.log("TrainService Response:",res.status)
+  if(!res.ok){return await res.text()}
   const data:Services = await res.json()
-  return data.result.data.map(obj=>({"serviceName":obj.serviceTypeName,"optionalServiceId":obj.optionalServiceId}))
+  const obj =  data.result.data[0]
+  if(obj){
+    return {"serviceName":obj.serviceTypeName,"optionalServiceId":obj.optionalServiceId,"showMoney":obj.showMoney,"proposalId":PropsosalId}
+  }
+  else{
+    return null
+  }
 }
