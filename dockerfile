@@ -15,7 +15,7 @@ RUN chmod -R a+rw /app
 COPY package.json /app
 # Install dependencies
 RUN npm i
-RUN apt-get update && apt-get install cron vim -y 
+RUN apt-get update && apt-get install nohup cron vim -y 
 # Copy the remaining application code
 COPY src ./src
 COPY .swrc ./.swrc
@@ -31,4 +31,4 @@ RUN crontab /etc/cron.d/cronfile
 EXPOSE 3000
 
 # Command to run the application
-CMD npm run server && cron && tail -f /env/cron.log
+CMD nohup npm run server && cron && tail -f /env/cron.log
