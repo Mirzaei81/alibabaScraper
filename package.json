@@ -6,7 +6,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "dev":"swc ./src -d ./dist & nodemon --watch src --watch public ./dist/server.js",
-    "server": "swc ./src -d ./dist & node ./dist/server.js",
+    "server": "swc ./src -d ./dist & dir &node ./dist/server.js",
     "test": "jest ."
   },
   "keywords": [
