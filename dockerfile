@@ -13,12 +13,10 @@ WORKDIR /app
 RUN chmod -R a+rw .
 RUN chmod -R a+rw /app
 COPY package.json /app
+ADD ./* /app
 # Install dependencies
 RUN npm i
 # Copy the remaining application code
-COPY src ./src
-COPY .swrc ./.swrc
-COPY .env ./.env
 USER root
 RUN apt-get update 
 RUN  apt-get install -y  cron
